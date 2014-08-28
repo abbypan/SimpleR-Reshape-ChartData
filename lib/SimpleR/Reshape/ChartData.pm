@@ -12,8 +12,8 @@ read_chart_data_dim3_scatter
 
 our $VERSION = 0.03;
 
-use SimpleR::Reshape;
-use SimpleR::Stat;
+use SimpleR::Reshape qw/read_table melt/;
+use SimpleR::Stat qw/uniq_arrayref conv_arrayref_to_hash/;
 
 sub read_chart_data_dim3_scatter {
     my ( $d, %opt ) = @_;
@@ -47,6 +47,7 @@ sub read_chart_data_dim3_horizon {
     my ( $d, %opt ) = @_;
     my $r = read_table( $d, %opt );
     $xr = melt( $r, id => $opt{label}, measure => $opt{legend}, names=> $opt{names}, return_arrayref=> 1,  );
+
     return read_chart_data_dim3( $xr, 
         label => [0], 
         legend => [1], 
@@ -71,6 +72,7 @@ sub read_chart_data_dim3 {
 
     my $r = read_table( $d, %opt );
     my $h = conv_arrayref_to_hash( $r, [ $opt{legend}, $opt{label} ], $opt{data} );
+
 
     my @legend_fields = $opt{legend_sort} ? @{ $opt{legend_sort} } : sort keys(%$h);
     my $label_uniq = uniq_arrayref([ map { keys(%{$h->{$_}}) } @legend_fields ]);
