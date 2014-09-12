@@ -61,6 +61,7 @@ sub read_chart_data_dim2 {
     my ($d, %opt) = @_;
 
     $opt{legend} = $opt{label};
+    $opt{legend_sort} = $opt{label_sort};
     my ($res, %res_opt) = read_chart_data_dim3($d, %opt); 
     my @data = map { $res->[$_][$_] } (0 .. $#$res);
 
