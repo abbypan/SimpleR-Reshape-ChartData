@@ -10,10 +10,10 @@ read_chart_data_dim3_horizon
 read_chart_data_dim3_scatter
 );
 
-our $VERSION = 0.04;
+our $VERSION = 0.05;
 
 use SimpleR::Reshape qw/read_table melt/;
-use SimpleR::Stat qw/uniq_arrayref conv_arrayref_to_hash/;
+use SimpleR::Stat qw/uniq_arrayref conv_arrayref_to_hash sort_by_other_arrayref transpose_arrayref/;
 
 sub make_chart_data {
     my ($h, $legend, $label) = @_;
@@ -43,10 +43,13 @@ sub read_chart_data_dim3_scatter {
 
 sub read_chart_data_dim3_horizon {
     my ( $d, %opt ) = @_;
-    my $r = read_table( $d, %opt );
-    $xr = melt( $r, id => $opt{label}, measure => $opt{legend}, names=> $opt{names}, return_arrayref=> 1,  );
 
-    delete($opt{names});
+    my $r = read_table( $d, %opt ); 
+    delete($opt{conv_sub});#conv_sub在读入时生效
+
+    $xr = melt( $r, id => $opt{label}, measure => $opt{legend}, names=> $opt{names}, return_arrayref=> 1,  );
+    delete($opt{names}); #names在转换时生效
+
     return read_chart_data_dim3( $xr, 
         %opt, 
         label => [0], 
@@ -99,10 +102,19 @@ sub read_chart_data_dim3 {
         $_ ||= 0 for @$c;
     }
 
+    my $label_ref = \@label_fields;
+    if($opt{resort_label_by_chart_data_map}){
+        my $tc = transpose_arrayref($chart_data);
+        ($label_ref, $tc_new) = sort_by_other_arrayref(\@label_fields, $tc, 
+           $opt{resort_label_by_chart_data_map},
+           $opt{resort_label_by_chart_data_sort}
+       );
+        $chart_data = transpose_arrayref($tc_new);
+    }
+
     return (
-        #\@chart_data,
         $chart_data, 
-        label  => \@label_fields,
+        label  => $label_ref, 
         legend => \@legend_fields,
     );
 }
